@@ -1,0 +1,44 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+
+trigger:
+ branches:
+  include:
+  - master
+ paths:
+   include:
+     - done.json
+on: [push, workflow_dispatch]
+
+name: Deploy Arm files
+
+variables:
+  azureSubscriptionId: 85916973-c513-4682-83b0-420ef3d3c878
+  vmImageName: 'ubuntu-latest'
+  resourceGroupName: 'GanaRG'
+  location: 'eastus'
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+#Login in your azure subscription using a service principal (credentials stored as GitHub Secret in repo)
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.GITSECRET }}
+- task: AzureCLI@2
+  inputs:
+    azureSubscriptionId: $(azureSubscriptionId)
+    scriptType: bash
+    scriptLocation: inlineScript
+    useGlobalConfig: false
+    inlineScript: |
+      az --version
+      az group create --name $(resourceGroupName) --location $(location)
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(templateFile)
+      
+      
+      
